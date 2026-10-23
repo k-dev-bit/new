@@ -1,6 +1,4 @@
-mkdir -p .github/workflows
 
-cat > .github/workflows/android-apk.yml <<'EOF'
 name: Build Nova AI APK
 
 on:
@@ -45,4 +43,3 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
-EOF
