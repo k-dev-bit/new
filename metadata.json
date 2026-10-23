@@ -1,0 +1,6 @@
+{
+  "name": "NOVA AI Assistant",
+  "description": "NOVA AI personal assistant with background 'Utho Nova' wake-word listener, complete phone control, YouTube, calls, call screening, and multi-model AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
