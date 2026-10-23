@@ -10,13 +10,8 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: android-apk-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
-    name: Build Debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -29,10 +24,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
-      - name: Set up Android SDK
+      - name: Install Android SDK packages
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: Create Debug Keystore
         run: |
@@ -46,14 +42,14 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: Grant Gradle permission
+      - name: Check Gradle Wrapper
         run: |
-          if [ -f ./gradlew ]; then
-            chmod +x ./gradlew
-          else
-            echo "ERROR: gradlew not found. Ensure the Gradle wrapper is committed."
+          if [ ! -f ./gradlew ]; then
+            echo "ERROR: gradlew missing from repository root"
             exit 1
           fi
+          chmod +x ./gradlew
+          ./gradlew --version
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
