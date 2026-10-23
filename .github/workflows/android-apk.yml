@@ -10,8 +10,13 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: nova-ai-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    name: Build Android Debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -25,10 +30,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK packages
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Create Debug Keystore
         run: |
@@ -42,22 +47,26 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: Check Gradle Wrapper
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Check project files
         run: |
-          if [ ! -f ./gradlew ]; then
-            echo "ERROR: gradlew missing from repository root"
-            exit 1
-          fi
-          chmod +x ./gradlew
-          ./gradlew --version
+          test -f settings.gradle.kts -o -f settings.gradle
+          test -f build.gradle.kts -o -f build.gradle
+          test -f app/build.gradle.kts -o -f app/build.gradle
+          echo "Android project files found"
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace
 
       - name: Verify APK
         run: |
-          find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -print
-          test -n "$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -print -quit)"
+          APK_DIR="app/build/outputs/apk/debug"
+          find "$APK_DIR" -maxdepth 1 -name '*.apk' -print
+          test -n "$(find "$APK_DIR" -maxdepth 1 -name '*.apk' -print -quit)"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
